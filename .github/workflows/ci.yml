@@ -7,6 +7,7 @@ on:
 jobs:
   unit-checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -19,17 +20,23 @@ jobs:
 
   informational-sandbox-probe:
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Attempt Bubblewrap installation for disposable runner
+      - name: Report optional system backend availability (no package installation)
         shell: bash
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y bubblewrap || echo '::warning::Could not install bwrap; fixture should report HELD.'
+          if command -v bwrap >/dev/null 2>&1; then
+            echo "::notice::Bubblewrap available on this runner; testing only the fixed fixture."
+          else
+            echo "::notice::Bubblewrap absent. Probe must report HELD; no package install will be attempted."
+          fi
       - name: Collect narrow fixture qualification evidence (informational only)
         shell: bash
+        timeout-minutes: 1
         run: |
           set +e
           PYTHONPATH=src python -m phivine sandbox-check > sandbox-fixture-report.json
@@ -44,9 +51,9 @@ jobs:
           code = int(sys.argv[1])
           status = report.get("status", "")
           if code == 0 and status == "FIXTURE_BOUNDARY_OBSERVED_NOT_APP_READY" and report.get("fixture_boundary_passed") is True:
-              print("::notice::Disposable fixture boundaries observed; application execution remains blocked.")
+              print("::notice::Narrow disposable fixture observed; application execution remains blocked.")
           elif code == 3 and status.startswith("HELD_") and report.get("fixture_boundary_passed") is False:
-              print("::warning::Disposable fixture HELD; this runner has NOT qualified a sandbox.")
+              print("::warning::Sandbox fixture HELD; no isolation claim is made for this runner.")
           else:
               sys.exit(f"Unexpected sandbox probe result: exit={code}, status={status}")
           PY

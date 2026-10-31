@@ -1,39 +1,43 @@
 # ΦVine
 
-A local-first Windows compatibility planning project for PhiOS.
+**A local-first Windows software compatibility project for PhiOS.**
 
-PhiVine integrates with upstream tools conceptually; it does not reimplement Wine. Windows program execution is not provided yet.
+PhiVine does not reimplement Wine or bundle Windows runtimes. It is building a governed compatibility path for the Linux PhiOS desktop.
 
-## Rung 4
+## Rung 5: Exact snapshots and runner observations
 
-Four commands are currently provided:
+Current commands:
 
-- `inspect path.exe`: read a local binary candidate and report basic header evidence.
-- `plan path.exe`: produce an advisory launch proposal, always held.
-- `sandbox-check`: run a fixed Linux Bubblewrap test fixture, never a user application.
-- `verify-plan proposal.json`: reopen the planned file without following symlinks and compare observed SHA-256 and size with the previous plan.
+- `inspect path.exe`: inspect and hash a local candidate.
+- `plan path.exe`: create a held launch proposal without executing anything.
+- `verify-plan proposal.json`: check the current file against the proposed digest.
+- `sandbox-check`: run only a fixed harmless Bubblewrap fixture.
+- `stage-plan proposal.json --store /private/store`: explicitly copy matching bytes to a digest-named snapshot in an **existing user-owned 0700 directory**.
+- `observe-runner /absolute/path/to/wine`: hash a candidate ELF runner without executing it.
 
-A matching verification is an observation at a moment in time, not a guarantee that the input is safe or unchanged afterward. No permission to launch an executable is granted.
+**A snapshot is NOT immutable or trusted. A runner fingerprint is NOT an attestation. No Windows software can yet be launched through PhiVine.** All executable authority and sandbox gates remain unmet.
 
-## Usage
-
-Python 3.11+:
+## Example (Linux, Python 3.11+)
 
 ```sh
-PYTHONPATH=src python -m phivine plan ./old-app.exe > proposal.json
+PYTHONPATH=src python -m phivine plan ./old-tool.exe > proposal.json
 PYTHONPATH=src python -m phivine verify-plan proposal.json
-PYTHONPATH=src python -m phivine sandbox-check
+mkdir -m 700 "$HOME/phivine-stage"
+PYTHONPATH=src python -m phivine stage-plan proposal.json --store "$HOME/phivine-stage"
+PYTHONPATH=src python -m phivine observe-runner /usr/bin/wine
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-Verification exits zero on a matching snapshot, 3 when held, and 2 for an invalid or unreadable plan. It never runs Windows code. The sandbox-check likewise cannot launch user programs.
+Stage-plan makes one local write only on an explicit invocation. It rejects unsafe, missing or non-private store directories. Existing staged content is never overwritten. Successful snapshot reports still indicate `execution_authorized: false`. An absent runner, script wrapper, symlink or unrecognized runner is held.
 
-Contracts: [R1](docs/RUNG1_CONTRACT.md), [R2](docs/RUNG2_CONTRACT.md), [R3](docs/RUNG3_CONTRACT.md), [R4](docs/RUNG4_CONTRACT.md).
+Exit code 0 indicates a narrow observation or successful explicit copy, **not launch permission**. Held operations return 3; invalid/unreadable plan input returns 2.
 
-## Governance
+Full contracts: [R1](docs/RUNG1_CONTRACT.md), [R2](docs/RUNG2_CONTRACT.md), [R3](docs/RUNG3_CONTRACT.md), [R4](docs/RUNG4_CONTRACT.md), [R5](docs/RUNG5_CONTRACT.md).
 
-Capability is not authority. The existing PhiOS App Platform repository classifier is separate from PhiVine's binary inspection. A future executable integration needs trusted file pinning, real sandbox controls, explicit human approvals and audited process lifecycle.
+## Architecture
+
+PhiOS App Platform v0.58's source-repository profiling and PhiVine's local binary workflow remain separate. Any future execution adapter must have pinned immutable bytes, verified OS-level sandboxing, real runner attestation, explicit operator authorization and effect-bound receipts.
 
 ## License
 
-PhiVine original code and documentation: MIT. External compatibility engines retain their own licenses.
+Original PhiVine code and documentation are MIT. Wine and other upstream components keep their own licensing requirements.

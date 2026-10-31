@@ -1,11 +1,11 @@
-name: Rung 1 checks
+name: PhiVine unit checks and sandbox fixture evidence
 
 on:
   push:
   pull_request:
 
 jobs:
-  advisory-checks:
+  unit-checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,3 +16,43 @@ jobs:
         run: python -m compileall -q src tests
       - name: Unit tests
         run: PYTHONPATH=src python -m unittest discover -s tests -v
+
+  informational-sandbox-probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Attempt Bubblewrap installation for disposable runner
+        shell: bash
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y bubblewrap || echo '::warning::Could not install bwrap; fixture should report HELD.'
+      - name: Collect narrow fixture qualification evidence (informational only)
+        shell: bash
+        run: |
+          set +e
+          PYTHONPATH=src python -m phivine sandbox-check > sandbox-fixture-report.json
+          code=$?
+          set -e
+          cat sandbox-fixture-report.json
+          python - "$code" <<'PY'
+          import json
+          import sys
+          with open("sandbox-fixture-report.json", encoding="utf-8") as handle:
+              report = json.load(handle)
+          code = int(sys.argv[1])
+          status = report.get("status", "")
+          if code == 0 and status == "FIXTURE_BOUNDARY_OBSERVED_NOT_APP_READY" and report.get("fixture_boundary_passed") is True:
+              print("::notice::Disposable fixture boundaries observed; application execution remains blocked.")
+          elif code == 3 and status.startswith("HELD_") and report.get("fixture_boundary_passed") is False:
+              print("::warning::Disposable fixture HELD; this runner has NOT qualified a sandbox.")
+          else:
+              sys.exit(f"Unexpected sandbox probe result: exit={code}, status={status}")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phivine-r3-fixture-evidence
+          path: sandbox-fixture-report.json
+          if-no-files-found: warn

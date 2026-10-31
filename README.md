@@ -2,26 +2,41 @@
 
 **A local-first compatibility planner for PhiOS.**
 
-PhiVine is an experimental project to help PhiOS users assess and eventually run selected Windows applications on a Linux-based PhiOS desktop by integrating established compatibility engines such as Wine. It is **not** a replacement implementation of Wine.
+PhiVine is a proposed PhiOS compatibility layer that will eventually integrate established engines such as Wine to run selected Windows software on Linux. It is **not** a reimplementation or fork of Wine.
 
-## Status
+## Rung 1: advisory-only inspection
 
-**Rung 1: advisory-only foundation (in development).** No Windows executable installation or execution is currently implemented. No security sandbox or isolation is claimed. The PhiOS Linux target itself remains an alpha development preview.
+This repository now provides a small Python command that can inspect a local Windows executable, identify a supported PE header or a tentative MSI/compound-file candidate, hash the file, and report whether the \`wine\` command is visible on PATH.
 
-## Principles
+**It does not execute, install, isolate, sandbox, download, or grant permission to run any binary.** Its advisory results are not a compatibility guarantee. The future PhiOS integration is not yet implemented.
 
-- **Capability is not authority.** Inspection, detection, and compatibility recommendations never grant installation or execution permission.
-- **Offline by default.** No network calls or downloads during inspection.
-- **Explain before acting.** Produce reproducible, typed evidence and specific blockers.
-- **Reuse, don't counterfeit.** Wine/Proton and their licenses remain independent upstream components; no runtime is bundled.
-- **Fail closed.** Unknown formats and missing runners are held rather than treated as supported.
+Run without installing any dependencies:
 
-The initial architecture and a small standard-library Python CLI are being developed in a pull request. See the Rung 1 contract for precise limitations once merged.
+\`\`\`sh
+PYTHONPATH=src python -m phivine inspect ./example.exe
+\`\`\`
 
-## Relationship to PhiOS
+Or install the CLI with \`python -m pip install -e .\` and use \`phivine inspect ./example.exe\`.
 
-PhiOS App Platform v0.58 profiles public *repositories* and classifies source build paths. PhiVine's planned inspection addresses a distinct input: a local Windows PE executable or MSI package. Integration is **proposed**, not yet implemented.
+Run tests:
+
+\`\`\`sh
+PYTHONPATH=src python -m unittest discover -s tests -v
+\`\`\`
+
+The Rung 1 contract is at [docs/RUNG1_CONTRACT.md](docs/RUNG1_CONTRACT.md).
+
+## Governing principles
+
+1. **Capability is not authority.** Detecting a runner is not approval to run it.
+2. **Offline and read-only.** Inspection performs no network requests, downloads, installations, or subprocess calls.
+3. **Evidence before claim.** A file extension or located binary never establishes runtime compatibility.
+4. **Fail closed.** Unknown formats, architectures, and missing runners produce explicit held statuses.
+5. **Keep upstream independent.** No copy of Wine, Proton, DXVK, or their binaries is bundled.
+6. **No imaginary isolation.** Future permissions need separately verified Linux-level enforcement.
+
+PhiOS App Platform v0.58 inspects public source repositories. PhiVine Rung 1 assesses local Windows binary *candidates*; the two are currently separate.
 
 ## License
 
-MIT for original PhiVine code and documentation. Third-party executables and compatibility runtimes keep their own licenses.
+MIT for original PhiVine code. Third-party software retains its own licenses.

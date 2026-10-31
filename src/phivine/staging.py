@@ -110,10 +110,27 @@ def stage_plan(plan: Mapping[str, Any], store: str | Path) -> dict[str, object]:
                 except FileNotFoundError:
                     pass
                 else:
-                    return (_report("SNAPSHOT_STAGED_NOT_RUNNABLE", proposal_id, digest=digest,
-                                    staged=destination + "/" + name)
-                            if _snapshot_matches(dirfd, name, digest, size)
-                            else _report("HELD_EXISTING_STAGE_CONFLICT", proposal_id))
+                    if not _snapshot_matches(dirfd, name, digest, size):
+                        return _report("HELD_EXISTING_STAGE_CONFLICT", proposal_id)
+                    # Even on re-use, ensure the current source still matches
+                    # the proposal. Reuse does not silently bypass revalidation.
+                    current = hashlib.sha256()
+                    total = 0
+                    for block in iter(lambda: src.read(CHUNK), b""):
+                        total += len(block)
+                        if total > size:
+                            return _report("HELD_SOURCE_SIZE_MISMATCH", proposal_id)
+                        current.update(block)
+                    after = os.fstat(src.fileno())
+                    if (before.st_dev != after.st_dev or before.st_ino != after.st_ino
+                            or before.st_size != after.st_size or before.st_size != total
+                            or before.st_mtime_ns != after.st_mtime_ns
+                            or before.st_ctime_ns != after.st_ctime_ns):
+                        return _report("HELD_SOURCE_CHANGED_DURING_COPY", proposal_id)
+                    if not hmac.compare_digest(current.hexdigest(), digest):
+                        return _report("HELD_SOURCE_DIGEST_MISMATCH", proposal_id)
+                    return _report("SNAPSHOT_STAGED_NOT_RUNNABLE", proposal_id, digest=digest,
+                                   staged=destination + "/" + name)
 
                 tmpname = ".incoming-" + secrets.token_hex(16)
                 tmpfd = os.open(

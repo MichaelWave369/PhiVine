@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "phivine"
-version = "0.1.0a1"
-description = "Advisory-only Windows binary inspection for PhiOS"
+version = "0.2.0a1"
+description = "Advisory-only Windows binary inspection and governed launch proposals for PhiOS"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"

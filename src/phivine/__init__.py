@@ -1,3 +1,3 @@
-"""PhiVine: advisory-only Windows binary inspection for PhiOS."""
+"""PhiVine: advisory-only Windows binary inspection and launch planning."""
 
-__version__ = "0.1.0a1"
+__version__ = "0.2.0a1"

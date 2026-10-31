@@ -60,6 +60,13 @@ class StagingTests(unittest.TestCase):
         self.assertEqual(again["status"], "SNAPSHOT_STAGED_NOT_RUNNABLE")
         self.assertEqual(staged.stat().st_ino, ino)
 
+    def test_existing_snapshot_does_not_hide_changed_source(self):
+        self.assertEqual(self.stage()["status"], "SNAPSHOT_STAGED_NOT_RUNNABLE")
+        modified = bytearray(synthetic_pe())
+        modified[-1] ^= 1
+        self.source.write_bytes(modified)
+        self.assertEqual(self.stage()["status"], "HELD_SOURCE_DIGEST_MISMATCH")
+
     def test_changed_source_same_size_is_held(self):
         modified = bytearray(synthetic_pe())
         modified[-1] ^= 1

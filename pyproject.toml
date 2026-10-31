@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "phivine"
-version = "0.3.0a1"
-description = "Governed Windows compatibility planning and fixture-only Linux sandbox qualification for PhiOS"
+version = "0.4.0a1"
+description = "Advisory Windows compatibility planning and exact-artifact revalidation for PhiOS"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"

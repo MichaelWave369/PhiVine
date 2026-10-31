@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phivine"
+version = "0.1.0a1"
+description = "Advisory-only Windows binary inspection for PhiOS"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{name = "PhiVine contributors"}]
+dependencies = []
+
+[project.scripts]
+phivine = "phivine.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

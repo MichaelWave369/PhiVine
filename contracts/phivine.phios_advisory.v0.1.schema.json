@@ -1,0 +1,243 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MichaelWave369/PhiVine/blob/main/contracts/phivine.phios_advisory.v0.1.schema.json",
+  "title": "PhiVine advisory handoff to future PhiOS local binary intake",
+  "description": "UNTRUSTED OBSERVATION ONLY. Never permission, installation, or execution authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "phivine.phios_advisory.v0.1"
+    },
+    "producer": {
+      "const": "phivine"
+    },
+    "target": {
+      "const": "phios"
+    },
+    "handoff_type": {
+      "const": "local_windows_binary_advisory"
+    },
+    "status": {
+      "enum": [
+        "HELD_PHIOS_BINARY_INTAKE_NOT_IMPLEMENTED",
+        "HELD_INVALID_OR_TAMPERED_PROPOSAL"
+      ]
+    },
+    "proposal_id_observed": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^pv-[0-9a-f]{24}$"
+    },
+    "artifact": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string",
+              "maxLength": 4096
+            },
+            "sha256_observed": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "size_bytes_observed": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 536870912
+            },
+            "format_observed": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "architecture_observed": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "sha256_observed",
+            "size_bytes_observed",
+            "format_observed",
+            "architecture_observed"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "requested_effects": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "runner_family_requested": {
+              "const": "wine"
+            },
+            "network": {
+              "enum": [
+                "deny_requested",
+                "operator_review_requested"
+              ]
+            },
+            "extra_host_filesystem_access": {
+              "const": "not_requested"
+            }
+          },
+          "required": [
+            "runner_family_requested",
+            "network",
+            "extra_host_filesystem_access"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "observations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source_status": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "stage_status": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "runner_status": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "source_bytes_match_observed": {
+          "type": "boolean"
+        },
+        "stage_bytes_match_observed": {
+          "type": "boolean"
+        },
+        "runner_elf_observed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "source_status",
+        "stage_status",
+        "runner_status",
+        "source_bytes_match_observed",
+        "stage_bytes_match_observed",
+        "runner_elf_observed"
+      ]
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "phios_native_binary_intake_exists": {
+          "type": "boolean",
+          "const": false
+        },
+        "phios_api_called": {
+          "type": "boolean",
+          "const": false
+        },
+        "phios_app_registered": {
+          "type": "boolean",
+          "const": false
+        },
+        "trusted_origin_attested": {
+          "type": "boolean",
+          "const": false
+        },
+        "runtime_attested": {
+          "type": "boolean",
+          "const": false
+        },
+        "sandbox_verified": {
+          "type": "boolean",
+          "const": false
+        },
+        "install_authorized": {
+          "type": "boolean",
+          "const": false
+        },
+        "execution_authorized": {
+          "type": "boolean",
+          "const": false
+        },
+        "effect_lease_present": {
+          "type": "boolean",
+          "const": false
+        },
+        "windows_execution_attempted": {
+          "type": "boolean",
+          "const": false
+        }
+      },
+      "required": [
+        "phios_native_binary_intake_exists",
+        "phios_api_called",
+        "phios_app_registered",
+        "trusted_origin_attested",
+        "runtime_attested",
+        "sandbox_verified",
+        "install_authorized",
+        "execution_authorized",
+        "effect_lease_present",
+        "windows_execution_attempted"
+      ]
+    },
+    "required_before_execution": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 3,
+        "maxLength": 100
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 10,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 300
+      }
+    },
+    "handoff_id": {
+      "type": "string",
+      "pattern": "^pha-[0-9a-f]{24}$"
+    }
+  },
+  "required": [
+    "schema",
+    "producer",
+    "target",
+    "handoff_type",
+    "status",
+    "proposal_id_observed",
+    "artifact",
+    "requested_effects",
+    "observations",
+    "authority",
+    "required_before_execution",
+    "limitations",
+    "handoff_id"
+  ]
+}

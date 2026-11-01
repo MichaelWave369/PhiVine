@@ -66,6 +66,8 @@ def main(argv: list[str] | None = None) -> int:
             report = inspect_file(args.path)
         elif args.command == "inspect-imports":
             report = inspect_pe_imports(args.path)
+        elif args.command == "triage-imports":
+            report = review_pe_imports(args.path)
         elif args.command == "plan":
             report = plan_launch(args.path, request_network=args.request_network)
         elif args.command == "verify-plan":

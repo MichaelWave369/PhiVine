@@ -5,6 +5,7 @@ import json
 import sys
 
 from .inspector import InspectionError, inspect_file
+from .import_triage import review_pe_imports
 from .pe_imports import inspect_pe_imports
 from .phios_handoff import build_phios_handoff
 from .planner import plan_launch

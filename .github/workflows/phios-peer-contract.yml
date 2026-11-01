@@ -1,0 +1,47 @@
+name: PhiVine reciprocal PhiOS peer compatibility
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  phios-held-peer-contract:
+    name: Current PhiVine CLI -> pinned PhiOS reader (HELD ONLY)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout current PhiVine PR source without stored credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Checkout exact merged PhiOS Rung 9 reader
+        uses: actions/checkout@v4
+        with:
+          repository: MichaelWave369/PhiOS
+          ref: 8ce70d2425b1c3b1de08f8e80cc9df65f03f525f
+          path: .ci-phios
+          persist-credentials: false
+      - name: Set up common Python version
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install pinned PhiOS reader's package dependencies
+        run: python -m pip install -e ./.ci-phios
+      - name: Exercise real PhiVine CLI and held PhiOS reader
+        run: |
+          python scripts/verify_phios_peer_contract.py \
+            --phios .ci-phios \
+            --receipt peer-evidence/phivine-phios-held.json
+      - name: Retain review receipt, not any executable or fixture
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phivine-phios-held-peer-contract
+          path: peer-evidence/phivine-phios-held.json
+          retention-days: 14
+          if-no-files-found: warn

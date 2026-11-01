@@ -43,6 +43,14 @@ It never claims those dependencies are available or that the program
 can run. The command always exits `3` (HELD) after a review.
 See [Rung 10](docs/RUNG10_STATIC_DEPENDENCY_REVIEW.md).
 
+## Rung 11: reciprocal PhiOS static-review check
+
+The existing reciprocal CI job now tests **both** PhiVine's Rung 7 held
+advisory and Rung 10 static DLL triage output against the exact merged
+PhiOS Rung 11 reader, with deliberately inert PE fixtures. Neither
+contract grants execution or compatibility. See
+[Rung 11 reciprocal acceptance](docs/RUNG11_PHIOS_TRIAGE_RECIPROCAL.md).
+
 ## Tests
 
 ```sh

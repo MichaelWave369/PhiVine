@@ -5,6 +5,7 @@ import json
 import sys
 
 from .inspector import InspectionError, inspect_file
+from .phios_handoff import build_phios_handoff
 from .planner import plan_launch
 from .revalidate import read_plan_json, revalidate_plan
 from .runner import observe_runner
@@ -43,6 +44,13 @@ def main(argv: list[str] | None = None) -> int:
     resolve = sub.add_parser("resolve-runner",
                              help="Observe bounded Wine symlink chains and wrappers; no execution")
     resolve.add_argument("path", help="Absolute local runner path; symlink targets are observations only")
+    handoff = sub.add_parser(
+        "phios-handoff",
+        help="Build a path-redacted, permanently HELD advisory record for future PhiOS integration",
+    )
+    handoff.add_argument("proposal_json", help="Local held proposal JSON")
+    handoff.add_argument("--store", help="Optional existing private stage directory for live verification")
+    handoff.add_argument("--runner", help="Optional absolute Wine runner path for live observation")
     sub.add_parser("sandbox-check",
                    help="Run only a fixed harmless Bubblewrap fixture, not Windows applications")
     args = parser.parse_args(argv)
@@ -62,6 +70,12 @@ def main(argv: list[str] | None = None) -> int:
             report = observe_runner(args.path)
         elif args.command == "resolve-runner":
             report = resolve_runner(args.path)
+        elif args.command == "phios-handoff":
+            report = build_phios_handoff(
+                read_plan_json(args.proposal_json),
+                stage_store=args.store,
+                runner_path=args.runner,
+            )
         else:
             report = qualify_fixture_sandbox()
     except (InspectionError, OSError, ValueError) as exc:
@@ -80,5 +94,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "observe-runner" and not report["binary_identity_observed"]:
         return 3
     if args.command == "resolve-runner" and not report["resolved_elf_observed"]:
+        return 3
+    # A handoff can NEVER be interpreted as success/authorization by exit code.
+    if args.command == "phios-handoff":
         return 3
     return 0

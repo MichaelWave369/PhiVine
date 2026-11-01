@@ -34,6 +34,15 @@ to observe bounded imported DLL basenames and the input file hash. The command
 Wine or grants compatibility or installation authority. See
 [the Rung 9 limitations and test contract](docs/RUNG9_PE_IMPORT_EVIDENCE.md).
 
+## Rung 10: manual-review hints from direct DLL names
+
+`PYTHONPATH=src python -m phivine triage-imports ./old-app.exe`
+groups observed **direct import DLL names** into human-review areas such
+as graphics, network policy, managed runtimes and compiler runtimes.
+It never claims those dependencies are available or that the program
+can run. The command always exits `3` (HELD) after a review.
+See [Rung 10](docs/RUNG10_STATIC_DEPENDENCY_REVIEW.md).
+
 ## Tests
 
 ```sh

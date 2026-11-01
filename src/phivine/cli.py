@@ -5,6 +5,7 @@ import json
 import sys
 
 from .inspector import InspectionError, inspect_file
+from .import_triage import review_pe_imports
 from .pe_imports import inspect_pe_imports
 from .phios_handoff import build_phios_handoff
 from .planner import plan_launch
@@ -26,6 +27,8 @@ def main(argv: list[str] | None = None) -> int:
     inspect.add_argument("path", help="Local .exe or .msi candidate")
     imports = sub.add_parser("inspect-imports", help="Bounded read-only direct PE import DLL names (HELD)")
     imports.add_argument("path", help="Local .exe; no code or DLL execution")
+    triage = sub.add_parser("triage-imports", help="Review direct DLL names without granting compatibility")
+    triage.add_argument("path", help="Local .exe input for read-only inspection")
     plan = sub.add_parser("plan", help="Non-executable Wine launch proposal")
     plan.add_argument("path", help="Local .exe or .msi candidate")
     plan.add_argument("--request-network", action="store_true",
@@ -63,6 +66,8 @@ def main(argv: list[str] | None = None) -> int:
             report = inspect_file(args.path)
         elif args.command == "inspect-imports":
             report = inspect_pe_imports(args.path)
+        elif args.command == "triage-imports":
+            report = review_pe_imports(args.path)
         elif args.command == "plan":
             report = plan_launch(args.path, request_network=args.request_network)
         elif args.command == "verify-plan":
@@ -89,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
 
     print(json.dumps(report, indent=2, sort_keys=True))
     # Names on disk are observations, never a compatibility or launch grant.
-    if args.command == "inspect-imports":
+    if args.command in ("inspect-imports", "triage-imports"):
         return 3
     if args.command == "sandbox-check" and not report["fixture_boundary_passed"]:
         return 3

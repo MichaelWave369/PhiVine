@@ -15,7 +15,7 @@ import subprocess
 import sys
 import tempfile
 
-PHIOS_PIN = "8ce70d2425b1c3b1de08f8e80cc9df65f03f525f"
+PHIOS_PIN = "34553a6214b05e5bb6c42665d89621d13f1f0516"
 AUTHORITY_FLAGS = (
     "app_registry_read_or_modified",
     "phios_install_or_launch_called",

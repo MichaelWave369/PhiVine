@@ -1,4 +1,4 @@
-name: PhiVine reciprocal PhiOS peer compatibility
+name: PhiVine reciprocal PhiOS advisory + DLL triage contracts
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   phios-held-peer-contract:
-    name: Current PhiVine CLI -> pinned PhiOS reader (HELD ONLY)
+    name: Current PhiVine -> pinned PhiOS dual HELD contracts
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -19,11 +19,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Checkout exact merged PhiOS Rung 9 reader
+      - name: Checkout exact merged PhiOS Rung 11 readers
         uses: actions/checkout@v4
         with:
           repository: MichaelWave369/PhiOS
-          ref: 8ce70d2425b1c3b1de08f8e80cc9df65f03f525f
+          ref: 34553a6214b05e5bb6c42665d89621d13f1f0516
           path: .ci-phios
           persist-credentials: false
       - name: Set up common Python version
@@ -37,11 +37,18 @@ jobs:
           python scripts/verify_phios_peer_contract.py \
             --phios .ci-phios \
             --receipt peer-evidence/phivine-phios-held.json
-      - name: Retain review receipt, not any executable or fixture
+      - name: Exercise real PhiVine static triage against held PhiOS Rung 11 reader
+        run: |
+          python scripts/verify_phios_triage_peer.py \
+            --phios .ci-phios \
+            --receipt peer-evidence/phivine-phios-triage-held.json
+      - name: Retain bounded review receipts only (never executable fixtures)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: phivine-phios-held-peer-contract
-          path: peer-evidence/phivine-phios-held.json
+          name: phivine-phios-held-peer-contracts
+          path: |
+            peer-evidence/phivine-phios-held.json
+            peer-evidence/phivine-phios-triage-held.json
           retention-days: 14
           if-no-files-found: warn

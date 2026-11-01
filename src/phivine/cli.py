@@ -1,7 +1,4 @@
-"""PhiVine inspect, plan, verify, stage and observe runner identities.
-
-No CLI command launches Wine or any user-provided Windows executable.
-"""
+"""PhiVine evidence CLI: no user-provided executable is ever launched."""
 
 import argparse
 import json
@@ -11,14 +8,16 @@ from .inspector import InspectionError, inspect_file
 from .planner import plan_launch
 from .revalidate import read_plan_json, revalidate_plan
 from .runner import observe_runner
+from .runner_resolve import resolve_runner
 from .sandbox import qualify_fixture_sandbox
 from .staging import stage_plan
+from .stage_verify import verify_stage
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="phivine",
-        description="Offline Windows binary evidence and separately requested snapshot staging.",
+        description="Offline Windows compatibility evidence, never execution authority.",
     )
     sub = parser.add_subparsers(dest="command", required=True)
     inspect = sub.add_parser("inspect", help="Read-only Windows binary evidence")
@@ -30,15 +29,22 @@ def main(argv: list[str] | None = None) -> int:
     verify = sub.add_parser("verify-plan", help="Read-only exact-file revalidation")
     verify.add_argument("proposal_json", help="Local JSON from phivine plan")
     stage = sub.add_parser("stage-plan",
-                           help="Explicitly copy a planned .exe into an existing private store; no execution")
+                           help="Explicitly copy a planned .exe to an existing private store; no execution")
     stage.add_argument("proposal_json", help="Local JSON from phivine plan")
     stage.add_argument("--store", required=True,
-                       help="Existing absolute private 0700 directory, owned by the invoking user")
+                       help="Existing absolute private directory owned by the invoking user")
+    check = sub.add_parser("verify-stage",
+                           help="Read-only verification of staged bytes against a held proposal")
+    check.add_argument("proposal_json", help="Local JSON from phivine plan")
+    check.add_argument("--store", required=True, help="Existing absolute private stage directory")
     runner = sub.add_parser("observe-runner",
-                            help="Read an exact ELF runner path and hash bytes; never invokes it")
+                            help="Read an exact ELF runner path and fingerprint bytes; never invokes it")
     runner.add_argument("path", help="Exact absolute local Wine ELF path; no PATH search")
+    resolve = sub.add_parser("resolve-runner",
+                             help="Observe bounded Wine symlink chains and wrappers; no execution")
+    resolve.add_argument("path", help="Absolute local runner path; symlink targets are observations only")
     sub.add_parser("sandbox-check",
-                   help="Run only fixed harmless Bubblewrap fixture, not Windows applications")
+                   help="Run only a fixed harmless Bubblewrap fixture, not Windows applications")
     args = parser.parse_args(argv)
 
     try:
@@ -50,8 +56,12 @@ def main(argv: list[str] | None = None) -> int:
             report = revalidate_plan(read_plan_json(args.proposal_json))
         elif args.command == "stage-plan":
             report = stage_plan(read_plan_json(args.proposal_json), args.store)
+        elif args.command == "verify-stage":
+            report = verify_stage(read_plan_json(args.proposal_json), args.store)
         elif args.command == "observe-runner":
             report = observe_runner(args.path)
+        elif args.command == "resolve-runner":
+            report = resolve_runner(args.path)
         else:
             report = qualify_fixture_sandbox()
     except (InspectionError, OSError, ValueError) as exc:
@@ -65,6 +75,10 @@ def main(argv: list[str] | None = None) -> int:
         return 3
     if args.command == "stage-plan" and not report["content_snapshot_created_or_reused"]:
         return 3
+    if args.command == "verify-stage" and not report["staged_bytes_match_observed"]:
+        return 3
     if args.command == "observe-runner" and not report["binary_identity_observed"]:
+        return 3
+    if args.command == "resolve-runner" and not report["resolved_elf_observed"]:
         return 3
     return 0

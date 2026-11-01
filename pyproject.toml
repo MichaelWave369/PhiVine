@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "phivine"
-version = "0.5.0a1"
-description = "Advisory Windows compatibility planning, snapshot staging and runner observation for PhiOS"
+version = "0.6.0a1"
+description = "Advisory Windows compatibility planning, stage verification, and Wine runner resolution for PhiOS"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"

@@ -25,6 +25,15 @@ The handoff record contains artifact digest/size, requested network policy, sour
 
 **Important:** PhiOS App Platform v0.58 profiles source repositories, not local Windows executables. Rung 7 does not change PhiOS or introduce a native binary import API. Any such consumer must be developed and independently qualified in PhiOS.
 
+## Rung 9: static Windows DLL import observations
+
+PhiVine now includes a deliberately **non-executing** PE32/PE32+ direct import
+reader. Run `PYTHONPATH=src python -m phivine inspect-imports ./old-app.exe`
+to observe bounded imported DLL basenames and the input file hash. The command
+**always exits 3** after an observation and never loads those DLLs, launches
+Wine or grants compatibility or installation authority. See
+[the Rung 9 limitations and test contract](docs/RUNG9_PE_IMPORT_EVIDENCE.md).
+
 ## Tests
 
 ```sh

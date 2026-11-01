@@ -1,40 +1,44 @@
 # ΦVine
 
-**Local-first Windows compatibility planning for PhiOS.**
+**Local-first Windows compatibility tooling for PhiOS.**
 
-PhiVine is an experimental, open-source integration project intended to use established compatibility runtimes such as Wine. It does not bundle Wine, and **does not launch Windows applications**.
+PhiVine is an experimental MIT-licensed project for a future governed Windows application compatibility path. It does not replace Wine or bundle Wine, and **it cannot run Windows applications yet**.
 
-## Rung 6: staged copy checks and runner discovery
+## Rung 7: PhiOS advisory handoff
 
-The project now supports six core evidence commands, with one additional experimental sandbox fixture:
+PhiVine now produces a **versioned, path-redacted, non-authorizing advisory record** that a future PhiOS native-binary intake feature could review. This is a producer-side contract, NOT a live PhiOS API integration.
 
-- `inspect old-app.exe`: classify a local executable candidate.
-- `plan old-app.exe`: create a held, non-executable proposal.
-- `verify-plan proposal.json`: compare a local input against its previously observed hash.
-- `stage-plan proposal.json --store /private/store`: explicitly copy matching bytes to a private SHA-named file.
-- `verify-stage proposal.json --store /private/store`: independently recheck the staged file's SHA-256, size, permissions, and hardlink count without modifying it.
-- `observe-runner /absolute/path` or `resolve-runner /absolute/path`: fingerprint a direct executable candidate or observe bounded runner symlink chains. Scripts are held, not executed.
-- `sandbox-check`: run only a fixed harmless Bubblewrap fixture, not an app sandbox.
-
-## Example (Linux, Python 3.11+)
+The command always returns a HELD decision and exits 3, including when all optional file observations succeed. It never registers an application, installs a program, executes Wine, or creates a permission token.
 
 ```sh
-PYTHONPATH=src python -m phivine plan ./legacy.exe > proposal.json
-mkdir -m 700 "$HOME/phivine-stage"
-PYTHONPATH=src python -m phivine stage-plan proposal.json --store "$HOME/phivine-stage"
-PYTHONPATH=src python -m phivine verify-stage proposal.json --store "$HOME/phivine-stage"
-PYTHONPATH=src python -m phivine resolve-runner /usr/bin/wine
+PYTHONPATH=src python -m phivine plan ./old-app.exe > proposal.json
+PYTHONPATH=src python -m phivine phios-handoff proposal.json
+
+# Optional read-only checks of existing files:
+PYTHONPATH=src python -m phivine phios-handoff proposal.json \
+  --store "$HOME/phivine-stage" --runner /usr/bin/wine
+```
+
+Earlier commands remain: `inspect`, `plan`, `verify-plan`, `stage-plan`, `verify-stage`, `observe-runner`, `resolve-runner`, and the fixed-fixture `sandbox-check`.
+
+The handoff record contains artifact digest/size, requested network policy, source/staged bytes observations, Wine runner observations, and every unmet authority gate. It omits absolute local paths by default. A deterministic handoff ID is only a checksum, not an authentication signature.
+
+**Important:** PhiOS App Platform v0.58 profiles source repositories, not local Windows executables. Rung 7 does not change PhiOS or introduce a native binary import API. Any such consumer must be developed and independently qualified in PhiOS.
+
+## Tests
+
+```sh
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-A successful snapshot verification establishes only a matching file **at that instant**; it never proves immutability. An ELF fingerprint does not prove the binary is Wine, verify its version or attest provenance. Symlink tracing is not race-free. Every Rung 2 launch proposal stays HELD. No Wine executable, script wrapper, or Windows binary is run by either Rung 6 command.
+No tests launch Windows binaries, Wine, or untrusted script wrappers. CI's optional Bubblewrap fixture is informational and never considered a production sandbox qualification.
 
-For fully documented limitations and the exact permission boundaries, see [R1](docs/RUNG1_CONTRACT.md), [R2](docs/RUNG2_CONTRACT.md), [R3](docs/RUNG3_CONTRACT.md), [R4](docs/RUNG4_CONTRACT.md), [R5](docs/RUNG5_CONTRACT.md), and [R6](docs/RUNG6_CONTRACT.md).
+Read the detailed [Rung 7 contract](docs/RUNG7_CONTRACT.md), the [JSON schema](contracts/phivine.phios_advisory.v0.1.schema.json), and earlier [Rung 1](docs/RUNG1_CONTRACT.md) through [Rung 6](docs/RUNG6_CONTRACT.md) specifications.
 
 ## Governance
 
-Capability is not authority. PhiVine's local binary inspection is separate from PhiOS App Platform's repository profiling. Real execution needs sealed/pinned bytes, attested runners/dependencies, an independently validated Linux sandbox, operator approvals, narrow leases and receipts. None of those gates is satisfied merely by a successful file check.
+Capability is not authority. Local file hashes, stage matching, runner symlinks, and handoff records are observational. Secure launch eventually requires exact immutable artifact binding, a separately attested Wine runtime and dependencies, verified Linux sandbox enforcement, authenticated human consent, an effect-bound PhiOS lease, and independent receipts.
 
 ## License
 
-Original PhiVine code and docs: MIT. Third-party compatibility engines keep their own licenses.
+Original PhiVine code and documentation are MIT. Upstream runtime licenses remain independent.

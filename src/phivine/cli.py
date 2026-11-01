@@ -27,6 +27,8 @@ def main(argv: list[str] | None = None) -> int:
     inspect.add_argument("path", help="Local .exe or .msi candidate")
     imports = sub.add_parser("inspect-imports", help="Bounded read-only direct PE import DLL names (HELD)")
     imports.add_argument("path", help="Local .exe; no code or DLL execution")
+    triage = sub.add_parser("triage-imports", help="Review direct DLL names without granting compatibility")
+    triage.add_argument("path", help="Local .exe input for read-only inspection")
     plan = sub.add_parser("plan", help="Non-executable Wine launch proposal")
     plan.add_argument("path", help="Local .exe or .msi candidate")
     plan.add_argument("--request-network", action="store_true",

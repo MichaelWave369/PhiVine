@@ -94,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
 
     print(json.dumps(report, indent=2, sort_keys=True))
     # Names on disk are observations, never a compatibility or launch grant.
-    if args.command == "inspect-imports":
+    if args.command in ("inspect-imports", "triage-imports"):
         return 3
     if args.command == "sandbox-check" and not report["fixture_boundary_passed"]:
         return 3

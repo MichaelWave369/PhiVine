@@ -1,3 +1,3 @@
-"""PhiVine: local-first, governed Windows compatibility tooling."""
+"""PhiVine: local-first governed Windows compatibility tooling."""
 
-__version__ = "0.6.0a1"
+__version__ = "0.7.0a1"
